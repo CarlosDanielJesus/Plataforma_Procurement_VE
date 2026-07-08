@@ -2,6 +2,12 @@ import streamlit as st
 import pandas as pd
 import requests
 from bs4 import BeautifulSoup
+from streamlit_option_menu import option_menu
+
+# ==========================================
+# 1. CONFIGURACIÓN DE PÁGINA (Debe ir de primero)
+# ==========================================
+st.set_page_config(page_title="Procurement VE", layout="wide")
 
 # Importaciones de tus módulos
 from modulos.ingesta_excel import cargar_inventario_excel
@@ -10,7 +16,7 @@ from modulos.cotizador import generar_cotizacion
 from modulos.base_datos import inicializar_tablas, verificar_login, obtener_catalogo_completo, guardar_inventario_en_bd, registrar_usuario
 
 # ==========================================
-# 0. FUNCIÓN DEL BOT BCV AUTOMÁTICO
+# 2. FUNCIÓN DEL BOT BCV AUTOMÁTICO
 # ==========================================
 @st.cache_data(ttl=43200) # Guarda el resultado en memoria por 12 horas (43200 segundos)
 def obtener_tasa_bcv_automatica():
@@ -28,7 +34,7 @@ def obtener_tasa_bcv_automatica():
         return 600.0 # Tasa manual de emergencia por si la página del banco se cae
 
 # ==========================================
-# 1. INICIALIZACIÓN Y CONFIGURACIÓN
+# 3. INICIALIZACIÓN Y CONFIGURACIÓN
 # ==========================================
 st.set_page_config(page_title="Procurement VE", layout="wide")
 inicializar_tablas() 
@@ -41,11 +47,50 @@ if 'id_usuario' not in st.session_state:
     st.session_state['id_usuario'] = None
 if 'carrito' not in st.session_state:
     st.session_state['carrito'] = {}
+    
+# ==========================================
+# 4. BARRA DE NAVEGACIÓN SUPERIOR
+# ==========================================
+seleccion = option_menu(
+    menu_title=None, 
+    options=["Inicio", "Servicios", "Portafolio", "Acceso al Sistema"],
+    icons=["house", "briefcase", "book", "person-circle"], 
+    menu_icon="cast",
+    default_index=0,
+    orientation="horizontal",
+    styles={
+        "container": {"padding": "0!important", "background-color": "#fafafa"},
+        "icon": {"color": "orange", "font-size": "18px"}, 
+        "nav-link": {"font-size": "16px", "text-align": "center", "margin":"0px", "--hover-color": "#eee"},
+        "nav-link-selected": {"background-color": "#02ab21"},
+    }
+)
+
+st.divider()
 
 # ==========================================
-# 2. PANTALLA DE ACCESO (LOGIN Y REGISTRO)
+# 5. ENRUTAMIENTO DE PÁGINAS
 # ==========================================
-if st.session_state['usuario_activo'] is None:
+
+if seleccion == "Inicio":
+    st.title("🏗️ Bienvenidos a Plataforma Procurement VE")
+    st.subheader("Optimizando la cadena de suministro para el sector construcción")
+    st.info("Aquí diseñaremos tu Landing Page de bienvenida.")
+
+elif seleccion == "Servicios":
+    st.title("💼 Nuestros Servicios")
+    st.write("Detalles de protección cambiaria, logística y B2B.")
+
+elif seleccion == "Portafolio":
+    st.title("📂 Portafolio y Aliados")
+    st.write("Casos de éxito y empresas que confían en nosotros.")
+
+elif seleccion == "Acceso al Sistema":
+
+# ==========================================
+# 6. PANTALLA DE ACCESO (LOGIN Y REGISTRO)
+# ==========================================
+ if st.session_state['usuario_activo'] is None:
     st.title("🔐 Acceso a la Plataforma")
     
     # Creamos dos pestañas visuales
@@ -89,7 +134,7 @@ if st.session_state['usuario_activo'] is None:
                     st.warning("Debes llenar todos los campos.")
 
 # ==========================================
-# 3. PANTALLA PRINCIPAL
+# 7. PANTALLA PRINCIPAL
 # ==========================================
 else:
     col_titulo, col_boton = st.columns([8, 2])
