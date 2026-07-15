@@ -457,18 +457,129 @@ st.divider()
 # 6. ENRUTAMIENTO DE PÁGINAS
 # ==========================================
 
+
 if seleccion == "Inicio":
-    st.title("🏗️ Bienvenidos a Plataforma Procurement VE")
-    st.subheader("Optimizando la cadena de suministro para el sector construcción")
-    st.info("Aquí diseñaremos tu Landing Page de bienvenida.")
+    # --- HERO SECTION (Banner principal) ---
+    st.markdown("""
+        <div style="text-align: center; padding: 2rem 0rem;">
+            <h1 style="color: #2563EB; font-size: 3.5rem; margin-bottom: 0;">Procurement VE</h1>
+            <h3 style="color: #64748B; font-weight: 300;">El Sistema Operativo Logístico y Financiero para la Construcción en Venezuela.</h3>
+        </div>
+    """, unsafe_allow_html=True)
+    
+    st.divider()
+
+    # --- PROPUESTA DE VALOR EN 3 PILARES ---
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        st.markdown("<h2 style='text-align: center;'>🛡️</h2>", unsafe_allow_html=True)
+        st.markdown("<h4 style='text-align: center;'>Riesgo Cero</h4>", unsafe_allow_html=True)
+        st.write("Eliminamos la incertidumbre cambiaria. Congelamos precios y protegemos el capital mediante nuestro sistema de Custodia Inteligente (Escrow) hasta que el material llega a la obra.")
+        
+    with col2:
+        st.markdown("<h2 style='text-align: center;'>⚡</h2>", unsafe_allow_html=True)
+        st.markdown("<h4 style='text-align: center;'>Fricción Cero</h4>", unsafe_allow_html=True)
+        st.write("Cotiza, compara y compra en 3 clics. Sin llamadas interminables, sin PDFs desactualizados. Un ecosistema 100% digitalizado, transparente y auditable.")
+        
+    with col3:
+        st.markdown("<h2 style='text-align: center;'>📈</h2>", unsafe_allow_html=True)
+        st.markdown("<h4 style='text-align: center;'>Futuro Cero Límites</h4>", unsafe_allow_html=True)
+        st.write("Diseñados para escalar. Integramos IA para cálculos de materiales y trazabilidad logística en tiempo real. Construye hoy con la tecnología de la próxima década.")
+
+    st.divider()
+
+    # --- LLAMADO A LA ACCIÓN (CTA) ---
+    st.markdown("### ¿Cómo funciona?")
+    paso1, paso2, paso3, paso4 = st.columns(4)
+    paso1.info("**1. Regístrate**\n\nCrea tu perfil como Proveedor (sube tu catálogo) o Constructora (accede a los precios).")
+    paso2.warning("**2. Cotiza**\n\nArma tu carrito. El motor calcula tasas, inflación y tiempos de pago al instante.")
+    paso3.error("**3. Paga Seguro**\n\nEl dinero se retiene de forma segura hasta que se confirma la entrega.")
+    paso4.success("**4. Construye**\n\nRecibe los materiales y califica al proveedor. Todo centralizado.")
+
 
 elif seleccion == "Servicios":
-    st.title("💼 Nuestros Servicios")
-    st.write("Detalles de protección cambiaria, logística y B2B.")
+    st.title("💼 Ecosistema de Servicios Integrados")
+    st.markdown("Hemos desglosado los problemas históricos del sector construcción venezolano y creado soluciones desde los **primeros principios**.")
+    
+    st.write("") # Espaciador
+    
+    # Usamos Pestañas (Tabs) para no saturar la pantalla con texto
+    tab_escrow, tab_cobertura, tab_ia, tab_logistica = st.tabs([
+        "🛡️ Smart Escrow B2B", 
+        "💱 Cobertura Cambiaria", 
+        "🤖 Cotizador IA", 
+        "🚚 Logística Predictiva"
+    ])
+    
+    with tab_escrow:
+        st.subheader("Smart Escrow: Confianza Criptográfica en la Vida Real")
+        col_text, col_img = st.columns([2, 1])
+        col_text.write("""
+        **El problema:** El comprador teme pagar por adelantado y no recibir el material. El proveedor teme despachar y no recibir el pago.
+        
+        **Nuestra solución:** Actuamos como un árbitro neutral automatizado. 
+        1. La constructora transfiere los fondos a la bóveda de Procurement VE.
+        2. El proveedor visualiza los fondos garantizados y despacha la mercancía.
+        3. Cuando el material llega a la obra, el receptor valida la entrega con un código único y el sistema libera automáticamente el pago al proveedor.
+        
+        *Confianza total, sin burocracia.*
+        """)
+        col_img.info("### 🔒 100%\nFondos Garantizados para ambas partes.")
+        
+    with tab_cobertura:
+        st.subheader("Motor de Riesgo y Cobertura Inflacionaria")
+        st.write("En un entorno multimoneda, un día de retraso en el pago puede significar pérdidas masivas. Nuestro Motor Financiero analiza en tiempo real:")
+        st.markdown("""
+        *   Tasa BCV del día sincronizada automáticamente.
+        *   Proyecciones de inflación mensual parametrizables.
+        *   Cálculo automático del **Margen de Riesgo** según los días de crédito otorgados.
+        
+        Tus facturas proforma salen "blindadas". Sabes exactamente cuántos Bolívares transferir hoy para garantizar el valor en Dólares mañana.
+        """)
+        
+    with tab_ia:
+        st.subheader("Siri para tu Obra: Asistente de Cómputos (Próximamente)")
+        st.write("En el futuro cercano, no buscarás 'Sacos de Cemento'. Le dirás a la plataforma: *'Necesito construir un muro perimetral de 50 metros de largo por 2 de alto'*.")
+        st.write("Nuestra IA cruzará la física de materiales con nuestro catálogo en vivo para generar tu carrito de compras exacto, minimizando desperdicios y optimizando tu presupuesto.")
+        
+    with tab_logistica:
+        st.subheader("Trazabilidad Visual")
+        st.write("Adiós al 'el camión ya va en camino'. Integraremos visibilidad de despachos en tiempo real. Sabrás qué material viene, quién lo trae y a qué hora llega, reduciendo los tiempos muertos de tus cuadrillas en obra.")
+
 
 elif seleccion == "Portafolio":
-    st.title("📂 Portafolio y Aliados")
-    st.write("Casos de éxito y empresas que confían en nosotros.")
+    st.title("🤝 El Ecosistema de Confianza")
+    st.write("Plataforma Procurement VE no es solo software, es una red de los actores más serios y profesionales del sector.")
+    
+    # --- MÉTRICAS DE IMPACTO (Simuladas para el diseño visual) ---
+    st.markdown("### El Impacto de Digitalizar las Compras")
+    m1, m2, m3, m4 = st.columns(4)
+    m1.metric("Tiempo de Cotización", "15 min", "-72 hrs de espera", delta_color="inverse")
+    m2.metric("Riesgo Cambiario Asumido", "0%", "-15% promedio", delta_color="inverse")
+    m3.metric("Proveedores Verificados", "24+", "+3 este mes")
+    m4.metric("Precisión de Despachos", "99.8%", "+12%")
+    
+    st.divider()
+    
+    # --- ALIADOS / CASOS DE ÉXITO ---
+    st.markdown("### ¿Quiénes construyen con nosotros?")
+    
+    col_a1, col_a2 = st.columns(2)
+    
+    with col_a1:
+        st.info("""
+        **🏗️ "Constructora Visión 2030"**
+        
+        *"Antes perdíamos hasta 3 días comparando presupuestos por WhatsApp que vencían en horas por el tipo de cambio. Con Procurement VE, armamos el pedido, bloqueamos el precio y despachan al día siguiente. Revolucionaron nuestra operatividad administrativa."*
+        """)
+        
+    with col_a2:
+        st.success("""
+        **🧱 "Agregados y Cementos del Centro" (Proveedor)**
+        
+        *"El sistema de pagos protegidos nos permitió abrir líneas de crédito a constructoras nuevas sin riesgo. Sabemos que si despachamos, el dinero ya está garantizado en la plataforma. Hemos aumentado nuestras ventas corporativas un 40%."*
+        """)
 
 elif seleccion == texto_menu_acceso:
 
