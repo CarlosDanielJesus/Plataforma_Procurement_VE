@@ -6,40 +6,34 @@ def conectar_db():
     return sqlite3.connect('plataforma.db')
 
 def inicializar_tablas():
-    """Crea las tablas si no existen en la primera ejecución."""
-    conexion = conectar_db()
-    cursor = conexion.cursor()
+    conn = sqlite3.connect('procurement.db')
+    cursor = conn.cursor()
     
-    # Tabla de Usuarios
+    # Tabla de Usuarios (La que ya tienes)
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS usuarios (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            usuario TEXT UNIQUE NOT NULL,
-            password TEXT NOT NULL,
-            rol TEXT NOT NULL -- Puede ser 'Proveedor' o 'Constructora'
+            usuario TEXT UNIQUE,
+            password TEXT,
+            rol TEXT
         )
     ''')
     
-    # Tabla de Inventario Global
+    # Tabla de Inventario (¡Asegúrate de que tenga proveedor_id!)
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS inventario (
-            sku TEXT PRIMARY KEY,
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            sku TEXT,
+            material TEXT,
+            precio_usd REAL,
+            stock INTEGER,
             proveedor_id INTEGER,
-            material TEXT NOT NULL,
-            precio_usd REAL NOT NULL,
-            stock INTEGER NOT NULL,
             FOREIGN KEY(proveedor_id) REFERENCES usuarios(id)
         )
     ''')
     
-    # Insertar usuarios de prueba por defecto si la tabla está vacía
-    cursor.execute("SELECT COUNT(*) FROM usuarios")
-    if cursor.fetchone()[0] == 0:
-        cursor.execute("INSERT INTO usuarios (usuario, password, rol) VALUES ('epa', '1234', 'Proveedor')")
-        cursor.execute("INSERT INTO usuarios (usuario, password, rol) VALUES ('constructora_alfa', '1234', 'Constructora')")
-    
-    conexion.commit()
-    conexion.close()
+    conn.commit()
+    conn.close()
 
 def verificar_login(usuario, password):
     """Busca al usuario en la base de datos y retorna su rol si la clave es correcta."""
@@ -60,22 +54,49 @@ def obtener_catalogo_completo():
     conexion.close()
     return df   
 
-def guardar_inventario_en_bd(df_inventario, proveedor_id):
+def guardar_inventario_en_bd(df_inventario, proveedor_id, actualizar=False):
     """
-    Recibe un DataFrame de Pandas y lo guarda en la tabla 'inventario' de SQLite.
+    Guarda o actualiza el inventario en la base de datos.
+    - Si actualizar=False: Borra el inventario anterior de este proveedor y carga el nuevo de cero.
+    - Si actualizar=True: Busca si el SKU existe. Si existe, actualiza precio y stock. Si no, lo añade.
     """
-    conexion = conectar_db()
-    cursor = conexion.cursor()
-    
-    # Recorremos cada fila del Excel
-    for indice, fila in df_inventario.iterrows():
-        cursor.execute('''
-            INSERT OR REPLACE INTO inventario (sku, proveedor_id, material, precio_usd, stock)
-            VALUES (?, ?, ?, ?, ?)
-        ''', (fila['SKU'], proveedor_id, fila['MATERIAL'], fila['PRECIO_USD'], fila['STOCK']))
+    # 1. Conexión a tu base de datos (Asegúrate de que el nombre del archivo .db sea el que ya usabas)
+    conn = sqlite3.connect('procurement.db') 
+    cursor = conn.cursor()
+
+    if actualizar:
+        # --- MODO 1: ACTUALIZAR INVENTARIO EXISTENTE ---
+        for index, fila in df_inventario.iterrows():
+            # Intentamos actualizar primero (por si el SKU ya existe para este proveedor)
+            cursor.execute("""
+                UPDATE inventario 
+                SET material = ?, precio_usd = ?, stock = ?
+                WHERE sku = ? AND proveedor_id = ?
+            """, (fila['MATERIAL'], fila['PRECIO_USD'], fila['STOCK'], fila['SKU'], proveedor_id))
+            
+            # Si rowcount es 0, significa que no actualizó nada (el SKU es nuevo)
+            # Entonces, procedemos a insertarlo como un material nuevo
+            if cursor.rowcount == 0:
+                cursor.execute("""
+                    INSERT INTO inventario (sku, material, precio_usd, stock, proveedor_id)
+                    VALUES (?, ?, ?, ?, ?)
+                """, (fila['SKU'], fila['MATERIAL'], fila['PRECIO_USD'], fila['STOCK'], proveedor_id))
+
+    else:
+        # --- MODO 2: CARGAR INVENTARIO NUEVO (Reemplazo total) ---
+        # Borramos TODOS los materiales que pertenezcan a este proveedor
+        cursor.execute("DELETE FROM inventario WHERE proveedor_id = ?", (proveedor_id,))
         
-    conexion.commit()
-    conexion.close()
+        # Insertamos el Excel nuevo completo
+        for index, fila in df_inventario.iterrows():
+            cursor.execute("""
+                INSERT INTO inventario (sku, material, precio_usd, stock, proveedor_id)
+                VALUES (?, ?, ?, ?, ?)
+            """, (fila['SKU'], fila['MATERIAL'], fila['PRECIO_USD'], fila['STOCK'], proveedor_id))
+
+    # Guardamos los cambios y cerramos la conexión
+    conn.commit()
+    conn.close()
 
 def registrar_usuario(usuario, password, rol):
     """
