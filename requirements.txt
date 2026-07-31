@@ -1,5 +1,6 @@
 streamlit
 pandas
+openpyxl
+streamlit-option-menu
 requests
 beautifulsoup4
-streamlit-option-menu
