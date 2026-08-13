@@ -108,7 +108,7 @@ def registrar_usuario(usuario, password, rol):
     
     try:
         # Intentamos insertar el nuevo registro
-        cursor.execute("INSERT INTO usuarios (usuario, password, rol) VALUES (?, ?, ?)", (usuario, password, rol))
+        cursor.execute("INSERT INTO usuarios (usuario, password, rol) VALUES (?, ?, ?)", (usuario, password, rol)) 
         conexion.commit()
         exito = True
     except sqlite3.IntegrityError:
