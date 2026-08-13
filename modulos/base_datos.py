@@ -6,7 +6,7 @@ def conectar_db():
     return sqlite3.connect('plataforma.db')
 
 def inicializar_tablas():
-    conn = sqlite3.connect('procurement.db')
+    conn = sqlite3.connect('plataforma.db')
     cursor = conn.cursor()
     
     # Tabla de Usuarios (La que ya tienes)
