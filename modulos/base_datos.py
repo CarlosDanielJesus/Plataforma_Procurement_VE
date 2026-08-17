@@ -6,10 +6,10 @@ def conectar_db():
     return sqlite3.connect('plataforma.db')
 
 def inicializar_tablas():
-    conn = sqlite3.connect('plataforma.db')
+    conn = conectar_db() # Recuerda que cambiamos esto a conectar_db()
     cursor = conn.cursor()
     
-    # Tabla de Usuarios (La que ya tienes)
+    # 1. Tabla de Usuarios
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS usuarios (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -19,7 +19,14 @@ def inicializar_tablas():
         )
     ''')
     
-    # Tabla de Inventario (¡Asegúrate de que tenga proveedor_id!)
+    # --- EL PARCHE MÁGICO ---
+    # Intentamos inyectar la nueva columna en la tabla vieja de la nube
+    try:
+        cursor.execute("ALTER TABLE inventario ADD COLUMN proveedor_id INTEGER")
+    except:
+        pass # Si la columna ya existe o la tabla es nueva, ignora el error y sigue adelante
+    
+    # 2. Tabla de Inventario
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS inventario (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
