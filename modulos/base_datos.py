@@ -52,7 +52,7 @@ def obtener_catalogo_completo():
     Obtiene todo el inventario disponible de todos los proveedores 
     uniéndolo con el nombre de la empresa proveedora.
     """
-    conn = conectar_bd()
+    conn = conectar_db()
     try:
         # Hacemos un JOIN para traer el nombre del usuario/proveedor junto al inventario
         query = """
