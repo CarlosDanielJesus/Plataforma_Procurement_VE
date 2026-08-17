@@ -3,6 +3,16 @@ import pandas as pd
 import requests
 from bs4 import BeautifulSoup
 from streamlit_option_menu import option_menu
+import os 
+
+# --- BOTÓN DE AUTODESTRUCCIÓN (Borrar después de usar) ---
+if st.sidebar.button("⚠️ RESETEAR BASE DE DATOS"):
+    try:
+        os.remove("plataforma.db")
+        st.sidebar.success("¡Base de datos eliminada! Recarga la página.")
+    except Exception as e:
+        st.sidebar.error(f"Error o ya estaba borrada: {e}")
+# ---------------------------------------------------------
 
 # Importaciones de tus módulos
 from modulos.ingesta_excel import cargar_inventario_excel
