@@ -6,10 +6,16 @@ def conectar_db():
     return sqlite3.connect('plataforma.db')
 
 def inicializar_tablas():
-    conn = conectar_db() # Recuerda que cambiamos esto a conectar_db()
+    conn = conectar_db()
     cursor = conn.cursor()
     
-    # 1. Tabla de Usuarios
+    # --- RESET FORZADO DE LA NUBE ---
+    # Esto obligará a Streamlit Cloud a destruir las tablas viejas defectuosas
+    cursor.execute('DROP TABLE IF EXISTS inventario')
+    cursor.execute('DROP TABLE IF EXISTS usuarios')
+    # --------------------------------
+    
+    # 1. Creamos la tabla de Usuarios desde cero
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS usuarios (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -19,14 +25,7 @@ def inicializar_tablas():
         )
     ''')
     
-    # --- EL PARCHE MÁGICO ---
-    # Intentamos inyectar la nueva columna en la tabla vieja de la nube
-    try:
-        cursor.execute("ALTER TABLE inventario ADD COLUMN proveedor_id INTEGER")
-    except:
-        pass # Si la columna ya existe o la tabla es nueva, ignora el error y sigue adelante
-    
-    # 2. Tabla de Inventario
+    # 2. Creamos la tabla de Inventario desde cero (ahora sí con proveedor_id)
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS inventario (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
