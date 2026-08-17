@@ -48,11 +48,30 @@ def verificar_login(usuario, password):
     return None
 
 def obtener_catalogo_completo():
-    """Extrae todo el inventario de la base de datos para mostrarlo a los compradores."""
-    conexion = conectar_db()
-    df = pd.read_sql_query("SELECT sku AS SKU, material AS MATERIAL, precio_usd AS PRECIO_USD, stock AS STOCK FROM inventario", conexion)
-    conexion.close()
-    return df   
+    """
+    Obtiene todo el inventario disponible de todos los proveedores 
+    uniéndolo con el nombre de la empresa proveedora.
+    """
+    conn = conectar_bd()
+    try:
+        # Hacemos un JOIN para traer el nombre del usuario/proveedor junto al inventario
+        query = """
+            SELECT 
+                i.sku, 
+                i.material, 
+                i.precio_usd, 
+                i.stock, 
+                u.usuario AS proveedor
+            FROM inventario i
+            LEFT JOIN usuarios u ON i.proveedor_id = u.id
+        """
+        df = pd.read_sql_query(query, conn)
+        return df
+    except Exception as e:
+        print(f"Error al obtener el catálogo: {e}")
+        return pd.DataFrame(columns=['sku', 'material', 'precio_usd', 'stock', 'proveedor'])
+    finally:
+        conn.close()
 
 def guardar_inventario_en_bd(df_inventario, proveedor_id, actualizar=False):
     """
