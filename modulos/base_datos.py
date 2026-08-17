@@ -9,12 +9,6 @@ def inicializar_tablas():
     conn = conectar_db()
     cursor = conn.cursor()
     
-    # --- RESET FORZADO DE LA NUBE ---
-    # Esto obligará a Streamlit Cloud a destruir las tablas viejas defectuosas
-    cursor.execute('DROP TABLE IF EXISTS inventario')
-    cursor.execute('DROP TABLE IF EXISTS usuarios')
-    # --------------------------------
-    
     # 1. Creamos la tabla de Usuarios desde cero
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS usuarios (
