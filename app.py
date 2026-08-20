@@ -412,6 +412,8 @@ elif seleccion == texto_menu_acceso:
                                     st.error(f"Stock insuficiente. El proveedor tiene {stock_actual} unidades y ya tienes {cantidad_en_carrito} reservadas en tu carrito.")
                             else:
                                 st.error("Ese SKU no existe en el catálogo disponible.")
+                        else:
+                            st.warning("Por favor, ingresa un código SKU.")
 
                 # --- MOSTRAR EL CARRITO MEJORADO ---
                 if st.session_state['carrito']:
