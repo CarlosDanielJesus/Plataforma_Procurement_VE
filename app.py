@@ -372,7 +372,7 @@ elif seleccion == texto_menu_acceso:
                 st.error("El archivo no tiene el formato esperado (SKU, MATERIAL, PRECIO_USD, STOCK).")
 
         # --- VISTA CONSTRUCTORA (COMPRADOR) ---
-        elif st.session_state['rol_activo'] == 'Constructora':
+    elif st.session_state['rol_activo'] == 'Constructora':
             
             st.sidebar.header("⚙️ Variables Macroeconómicas")
             
