@@ -5,15 +5,6 @@ from bs4 import BeautifulSoup
 from streamlit_option_menu import option_menu
 import os 
 
-# --- BOTÓN DE AUTODESTRUCCIÓN (Borrar después de usar) ---
-if st.sidebar.button("⚠️ RESETEAR BASE DE DATOS"):
-    try:
-        os.remove("plataforma.db")
-        st.sidebar.success("¡Base de datos eliminada! Recarga la página.")
-    except Exception as e:
-        st.sidebar.error(f"Error o ya estaba borrada: {e}")
-# ---------------------------------------------------------
-
 # Importaciones de tus módulos
 from modulos.ingesta_excel import cargar_inventario_excel
 from modulos.motor_riesgo import MotorFinanciero
@@ -57,18 +48,6 @@ st.markdown("""
     }
     </style>
 """, unsafe_allow_html=True)
-
-# Importaciones de tus módulos locales
-from modulos.ingesta_excel import cargar_inventario_excel
-from modulos.motor_riesgo import MotorFinanciero
-from modulos.cotizador import generar_cotizacion
-from modulos.base_datos import (
-    inicializar_tablas, 
-    verificar_login, 
-    obtener_catalogo_completo, 
-    guardar_inventario_en_bd, 
-    registrar_usuario
-)
 
 # ==========================================
 # 3. INICIALIZACIÓN DE BASE DE DATOS Y SESIÓN
@@ -373,7 +352,16 @@ elif seleccion == texto_menu_acceso:
 
         # --- VISTA CONSTRUCTORA (COMPRADOR) ---
     elif st.session_state['rol_activo'] == 'Constructora':
-            
+        
+         # --- BOTÓN DE AUTODESTRUCCIÓN (Borrar después de usar) ---
+         if st.sidebar.button("⚠️ RESETEAR BASE DE DATOS"):
+           try:
+            os.remove("plataforma.db")
+            st.sidebar.success("¡Base de datos eliminada! Recarga la página.")
+           except Exception as e:
+            st.sidebar.error(f"Error o ya estaba borrada: {e}")
+         # ---------------------------------------------------------
+
             st.sidebar.header("⚙️ Variables Macroeconómicas")
             
             tasa_oficial = obtener_tasa_bcv_automatica()
@@ -411,18 +399,19 @@ elif seleccion == texto_menu_acceso:
                             if sku_limpio in df_catalogo['SKU'].values:
                                 stock_actual = df_catalogo.loc[df_catalogo['SKU'] == sku_limpio, 'STOCK'].values[0]
                                 
+                                cantidad_en_carrito = st.session_state['carrito'].get(sku_limpio, 0)
+                                cantidad_total_proyectada = cantidad_en_carrito + cantidad_input
+                                
                                 if cantidad_input <= stock_actual:
                                     if sku_limpio in st.session_state['carrito']:
                                         st.session_state['carrito'][sku_limpio] += cantidad_input
                                     else:
                                         st.session_state['carrito'][sku_limpio] = cantidad_input
-                                    st.success(f"Añadido: {cantidad_input}x {sku_limpio}")
+                                    st.success(f"Añadido: {cantidad_input}x {sku_limpio} (Total en carrito: {cantidad_total_proyectada})")
                                 else:
-                                    st.error(f"Stock insuficiente. Solo hay {stock_actual} unidades de {sku_limpio}.")
+                                    st.error(f"Stock insuficiente. El proveedor tiene {stock_actual} unidades y ya tienes {cantidad_en_carrito} reservadas en tu carrito.")
                             else:
                                 st.error("Ese SKU no existe en el catálogo disponible.")
-                        else:
-                            st.warning("Por favor, ingresa un código SKU.")
 
                 # --- MOSTRAR EL CARRITO MEJORADO ---
                 if st.session_state['carrito']:
