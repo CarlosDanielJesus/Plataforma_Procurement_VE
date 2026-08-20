@@ -399,18 +399,19 @@ elif seleccion == texto_menu_acceso:
                             if sku_limpio in df_catalogo['SKU'].values:
                                 stock_actual = df_catalogo.loc[df_catalogo['SKU'] == sku_limpio, 'STOCK'].values[0]
                                 
+                                cantidad_en_carrito = st.session_state['carrito'].get(sku_limpio, 0)
+                                cantidad_total_proyectada = cantidad_en_carrito + cantidad_input
+                                
                                 if cantidad_input <= stock_actual:
                                     if sku_limpio in st.session_state['carrito']:
                                         st.session_state['carrito'][sku_limpio] += cantidad_input
                                     else:
                                         st.session_state['carrito'][sku_limpio] = cantidad_input
-                                    st.success(f"Añadido: {cantidad_input}x {sku_limpio}")
+                                    st.success(f"Añadido: {cantidad_input}x {sku_limpio} (Total en carrito: {cantidad_total_proyectada})")
                                 else:
-                                    st.error(f"Stock insuficiente. Solo hay {stock_actual} unidades de {sku_limpio}.")
+                                    st.error(f"Stock insuficiente. El proveedor tiene {stock_actual} unidades y ya tienes {cantidad_en_carrito} reservadas en tu carrito.")
                             else:
                                 st.error("Ese SKU no existe en el catálogo disponible.")
-                        else:
-                            st.warning("Por favor, ingresa un código SKU.") 
 
                 # --- MOSTRAR EL CARRITO MEJORADO ---
                 if st.session_state['carrito']:
