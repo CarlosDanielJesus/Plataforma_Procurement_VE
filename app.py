@@ -353,159 +353,159 @@ elif seleccion == texto_menu_acceso:
         # --- VISTA CONSTRUCTORA (COMPRADOR) ---
     elif st.session_state['rol_activo'] == 'Constructora':
         
-         # --- BOTÓN DE AUTODESTRUCCIÓN (Borrar después de usar) ---
-         if st.sidebar.button("⚠️ RESETEAR BASE DE DATOS"):
-           try:
-            os.remove("plataforma.db")
-            st.sidebar.success("¡Base de datos eliminada! Recarga la página.")
-           except Exception as e:
-            st.sidebar.error(f"Error o ya estaba borrada: {e}")
-         # ---------------------------------------------------------
-            st.error("🚨 DEBUG: Streamlit SÍ entró al bloque de la Constructora")
-            st.sidebar.header("⚙️ Variables Macroeconómicas")
+# --- BOTÓN DE AUTODESTRUCCIÓN (Borrar después de usar) ---
+        if st.sidebar.button("⚠️ RESETEAR BASE DE DATOS"):
+            try:
+              os.remove("plataforma.db")
+              st.sidebar.success("¡Base de datos eliminada! Recarga la página.")
+            except Exception as e:
+                st.sidebar.error(f"Error o ya estaba borrada: {e}")
+                # ---------------------------------------------------------
+        
+        st.sidebar.header("⚙️ Variables Macroeconómicas")
             
-            tasa_oficial = obtener_tasa_bcv_automatica()
-            st.sidebar.success(f"Tasa BCV Automatizada: {tasa_oficial} Bs/USD")
+        tasa_oficial = obtener_tasa_bcv_automatica()
+        st.sidebar.success(f"Tasa BCV Automatizada: {tasa_oficial} Bs/USD")
             
-            tasa_bcv_manual = st.sidebar.number_input("Tasa BCV a utilizar", value=tasa_oficial)
-            dias_pago = st.sidebar.slider("Días estimados para el pago", 0, 30, 5)
-            inflacion_mes = st.sidebar.number_input("Inflación mensual estimada USD (%)", value=3.0)
+        tasa_bcv_manual = st.sidebar.number_input("Tasa BCV a utilizar", value=tasa_oficial)
+        dias_pago = st.sidebar.slider("Días estimados para el pago", 0, 30, 5)
+        inflacion_mes = st.sidebar.number_input("Inflación mensual estimada USD (%)", value=3.0)
 
-            motor = MotorFinanciero(tasa_bcv_actual=tasa_bcv_manual, inflacion_mensual_estimada=inflacion_mes)
+        motor = MotorFinanciero(tasa_bcv_actual=tasa_bcv_manual, inflacion_mensual_estimada=inflacion_mes)
 
-            st.subheader("🛒 Catálogo Global y Cotizador Automático")
-            df_catalogo = obtener_catalogo_completo()
+        st.subheader("🛒 Catálogo Global y Cotizador Automático")
+        df_catalogo = obtener_catalogo_completo()
             
-            if df_catalogo.empty:
-                st.info("El catálogo está vacío actualmente. Los proveedores deben cargar mercancía.")
-            else:
-                st.dataframe(df_catalogo, use_container_width=True)
-                
-                # --- SECCIÓN DE ARMAR PEDIDO ---
-                st.write("### 🛒 Armar Pedido (Carrito de Compras)")
-                
-                col_input1, col_input2, col_input3 = st.columns([2, 1, 1])
-                with col_input1:
-                    sku_input = st.text_input("Código SKU del Material (Ej. CEM-01)")
-                with col_input2:
-                    cantidad_input = st.number_input("Cantidad", min_value=1, step=1)
-                with col_input3:
-                    st.write("") 
-                    st.write("")
-                    if st.button("➕ Añadir al Pedido"):
-                        if sku_input:
-                            sku_limpio = sku_input.strip().upper() 
+        if df_catalogo.empty:
+            st.info("El catálogo está vacío actualmente. Los proveedores deben cargar mercancía.")
+        else:
+            st.dataframe(df_catalogo, use_container_width=True)
+            
+            # --- SECCIÓN DE ARMAR PEDIDO ---
+            st.write("### 🛒 Armar Pedido (Carrito de Compras)")
+            
+            col_input1, col_input2, col_input3 = st.columns([2, 1, 1])
+            with col_input1:
+                sku_input = st.text_input("Código SKU del Material (Ej. CEM-01)")
+            with col_input2:
+                cantidad_input = st.number_input("Cantidad", min_value=1, step=1)
+            with col_input3:
+                st.write("") 
+                st.write("")
+                if st.button("➕ Añadir al Pedido"):
+                    if sku_input:
+                        sku_limpio = sku_input.strip().upper() 
+                        
+                        if sku_limpio in df_catalogo['SKU'].values:
+                            stock_actual = df_catalogo.loc[df_catalogo['SKU'] == sku_limpio, 'STOCK'].values[0]
                             
-                            if sku_limpio in df_catalogo['SKU'].values:
-                                stock_actual = df_catalogo.loc[df_catalogo['SKU'] == sku_limpio, 'STOCK'].values[0]
-                                
-                                cantidad_en_carrito = st.session_state['carrito'].get(sku_limpio, 0)
-                                cantidad_total_proyectada = cantidad_en_carrito + cantidad_input
-                                
-                                if cantidad_input <= stock_actual:
-                                    if sku_limpio in st.session_state['carrito']:
-                                        st.session_state['carrito'][sku_limpio] += cantidad_input
-                                    else:
-                                        st.session_state['carrito'][sku_limpio] = cantidad_input
-                                    st.success(f"Añadido: {cantidad_input}x {sku_limpio} (Total en carrito: {cantidad_total_proyectada})")
+                            cantidad_en_carrito = st.session_state['carrito'].get(sku_limpio, 0)
+                            cantidad_total_proyectada = cantidad_en_carrito + cantidad_input
+                            
+                            if cantidad_input <= stock_actual:
+                                if sku_limpio in st.session_state['carrito']:
+                                    st.session_state['carrito'][sku_limpio] += cantidad_input
                                 else:
-                                    st.error(f"Stock insuficiente. El proveedor tiene {stock_actual} unidades y ya tienes {cantidad_en_carrito} reservadas en tu carrito.")
+                                    st.session_state['carrito'][sku_limpio] = cantidad_input
+                                st.success(f"Añadido: {cantidad_input}x {sku_limpio} (Total en carrito: {cantidad_total_proyectada})")
                             else:
-                                st.error("Ese SKU no existe en el catálogo disponible.")
+                                st.error(f"Stock insuficiente. El proveedor tiene {stock_actual} unidades y ya tienes {cantidad_en_carrito} reservadas en tu carrito.")
+                        else:
+                            st.error("Ese SKU no existe en el catálogo disponible.")
 
-                # --- MOSTRAR EL CARRITO MEJORADO ---
-                if st.session_state['carrito']:
-                    st.divider()
-                    st.write("#### 📦 Tu Pedido Actual")
+            # --- MOSTRAR EL CARRITO MEJORADO ---
+            if st.session_state['carrito']:
+                st.divider()
+                st.write("#### 📦 Tu Pedido Actual")
+                
+                col_h1, col_h2, col_h3, col_h4, col_h5, col_h6 = st.columns([1.5, 3, 1.5, 1.5, 1.5, 1])
+                col_h1.write("**SKU**")
+                col_h2.write("**Descripción**")
+                col_h3.write("**Precio Unit. (USD)**")
+                col_h4.write("**Cantidad**")
+                col_h5.write("**Subtotal**")
+                col_h6.write("**Acción**")
+                
+                st.markdown("---")
+                
+                for sku, cantidad in list(st.session_state['carrito'].items()):
+                    datos_item = df_catalogo[df_catalogo['SKU'] == sku].iloc[0]
+                    material = datos_item['MATERIAL']
+                    precio_unitario = datos_item['PRECIO_USD']
+                    subtotal = precio_unitario * cantidad
                     
-                    col_h1, col_h2, col_h3, col_h4, col_h5, col_h6 = st.columns([1.5, 3, 1.5, 1.5, 1.5, 1])
-                    col_h1.write("**SKU**")
-                    col_h2.write("**Descripción**")
-                    col_h3.write("**Precio Unit. (USD)**")
-                    col_h4.write("**Cantidad**")
-                    col_h5.write("**Subtotal**")
-                    col_h6.write("**Acción**")
+                    col1, col2, col3, col4, col5, col6 = st.columns([1.5, 3, 1.5, 1.5, 1.5, 1])
+                    col1.write(f"`{sku}`")
+                    col2.write(material)
+                    col3.write(f"${precio_unitario:.2f}")
+                    col4.write(str(cantidad))
+                    col5.write(f"**${subtotal:.2f}**")
                     
-                    st.markdown("---")
-                    
-                    for sku, cantidad in list(st.session_state['carrito'].items()):
-                        datos_item = df_catalogo[df_catalogo['SKU'] == sku].iloc[0]
-                        material = datos_item['MATERIAL']
-                        precio_unitario = datos_item['PRECIO_USD']
-                        subtotal = precio_unitario * cantidad
+                    if col6.button("❌", key=f"eliminar_{sku}", help=f"Eliminar {sku} del carrito"):
+                        del st.session_state['carrito'][sku]
+                        st.rerun()
+                
+                st.divider()
+                
+                # --- BOTONES DE ACCIÓN FINAL ---
+                col_facturar, col_limpiar = st.columns(2)
+                
+                with col_facturar:
+                    if st.button("✅ Generar Factura Proforma Protegida", type="primary", use_container_width=True):
+                        resultados = generar_cotizacion(df_catalogo, st.session_state['carrito'], motor, dias_pago)
                         
-                        col1, col2, col3, col4, col5, col6 = st.columns([1.5, 3, 1.5, 1.5, 1.5, 1])
-                        col1.write(f"`{sku}`")
-                        col2.write(material)
-                        col3.write(f"${precio_unitario:.2f}")
-                        col4.write(str(cantidad))
-                        col5.write(f"**${subtotal:.2f}**")
+                        st.divider()
+                        st.subheader("🧾 Factura Proforma Detallada")
                         
-                        if col6.button("❌", key=f"eliminar_{sku}", help=f"Eliminar {sku} del carrito"):
-                            del st.session_state['carrito'][sku]
-                            st.rerun()
-                    
-                    st.divider()
-                    
-                    # --- BOTONES DE ACCIÓN FINAL ---
-                    col_facturar, col_limpiar = st.columns(2)
-                    
-                    with col_facturar:
-                        if st.button("✅ Generar Factura Proforma Protegida", type="primary", use_container_width=True):
-                            resultados = generar_cotizacion(df_catalogo, st.session_state['carrito'], motor, dias_pago)
+                        h1, h2, h3, h4, h5 = st.columns([3, 1, 1.5, 1.5, 1.5])
+                        h1.write("**🧱 Material**")
+                        h2.write("**📦 Cant.**")
+                        h3.write("**💲 Unit. (USD)**")
+                        h4.write("**💵 Subtotal (USD)**")
+                        h5.write("**🇻🇪 Subtotal (VES)**")
+                        st.markdown("---")
+                        
+                        total_base_usd = 0
+                        
+                        for sku, cantidad in st.session_state['carrito'].items():
+                            datos_item = df_catalogo[df_catalogo['SKU'] == sku].iloc[0]
+                            material = datos_item['MATERIAL']
+                            precio_usd = datos_item['PRECIO_USD']
                             
-                            st.divider()
-                            st.subheader("🧾 Factura Proforma Detallada")
+                            subtotal_usd = precio_usd * cantidad
+                            subtotal_ves = subtotal_usd * tasa_bcv_manual
                             
-                            h1, h2, h3, h4, h5 = st.columns([3, 1, 1.5, 1.5, 1.5])
-                            h1.write("**🧱 Material**")
-                            h2.write("**📦 Cant.**")
-                            h3.write("**💲 Unit. (USD)**")
-                            h4.write("**💵 Subtotal (USD)**")
-                            h5.write("**🇻🇪 Subtotal (VES)**")
-                            st.markdown("---")
+                            total_base_usd += subtotal_usd
                             
-                            total_base_usd = 0
+                            f1, f2, f3, f4, f5 = st.columns([3, 1, 1.5, 1.5, 1.5])
+                            f1.write(f"{material} `({sku})`")
+                            f2.write(str(cantidad))
+                            f3.write(f"${precio_usd:.2f}")
+                            f4.write(f"${subtotal_usd:.2f}")
+                            f5.write(f"Bs. {subtotal_ves:.2f}")
                             
-                            for sku, cantidad in st.session_state['carrito'].items():
-                                datos_item = df_catalogo[df_catalogo['SKU'] == sku].iloc[0]
-                                material = datos_item['MATERIAL']
-                                precio_usd = datos_item['PRECIO_USD']
-                                
-                                subtotal_usd = precio_usd * cantidad
-                                subtotal_ves = subtotal_usd * tasa_bcv_manual
-                                
-                                total_base_usd += subtotal_usd
-                                
-                                f1, f2, f3, f4, f5 = st.columns([3, 1, 1.5, 1.5, 1.5])
-                                f1.write(f"{material} `({sku})`")
-                                f2.write(str(cantidad))
-                                f3.write(f"${precio_usd:.2f}")
-                                f4.write(f"${subtotal_usd:.2f}")
-                                f5.write(f"Bs. {subtotal_ves:.2f}")
-                                
-                            st.divider()
-                            
-                            total_base_ves = total_base_usd * tasa_bcv_manual
-                            margen_riesgo_usd = resultados['Gran_Total_Obra_USD'] - total_base_usd
-                            margen_riesgo_ves = resultados['Gran_Total_Obra_VES'] - total_base_ves
-                            
-                            st.write("### 📊 Resumen Financiero con Cobertura")
-                            
-                            m1, m2 = st.columns(2)
-                            
-                            m1.metric(
-                                label="Total Inversión Protegida (USD)", 
-                                value=f"${resultados['Gran_Total_Obra_USD']:.2f}", 
-                                delta=f"+ ${margen_riesgo_usd:.2f} (Margen de Riesgo a {dias_pago} días)",
-                                delta_color="inverse" 
-                            )
-                            
-                            m2.metric(
-                                label="Total a Transferir (VES)", 
-                                value=f"Bs. {resultados['Gran_Total_Obra_VES']:.2f}", 
-                                delta=f"+ Bs. {margen_riesgo_ves:.2f} (Margen de Riesgo a {dias_pago} días)",
-                                delta_color="inverse"
-                            )
-                            
-                            st.info("💡 Los subtotales en la lista muestran el precio base actual. Los totales generales incluyen la proyección financiera para proteger la operación.")
+                        st.divider()
+                        
+                        total_base_ves = total_base_usd * tasa_bcv_manual
+                        margen_riesgo_usd = resultados['Gran_Total_Obra_USD'] - total_base_usd
+                        margen_riesgo_ves = resultados['Gran_Total_Obra_VES'] - total_base_ves
+                        
+                        st.write("### 📊 Resumen Financiero con Cobertura")
+                        
+                        m1, m2 = st.columns(2)
+                        
+                        m1.metric(
+                            label="Total Inversión Protegida (USD)", 
+                            value=f"${resultados['Gran_Total_Obra_USD']:.2f}", 
+                            delta=f"+ ${margen_riesgo_usd:.2f} (Margen de Riesgo a {dias_pago} días)",
+                            delta_color="inverse" 
+                        )
+                        
+                        m2.metric(
+                            label="Total a Transferir (VES)", 
+                            value=f"Bs. {resultados['Gran_Total_Obra_VES']:.2f}", 
+                            delta=f"+ Bs. {margen_riesgo_ves:.2f} (Margen de Riesgo a {dias_pago} días)",
+                            delta_color="inverse"
+                        )
+                        
+                        st.info("💡 Los subtotales en la lista muestran el precio base actual. Los totales generales incluyen la proyección financiera para proteger la operación.")
