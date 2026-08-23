@@ -361,7 +361,7 @@ elif seleccion == texto_menu_acceso:
            except Exception as e:
             st.sidebar.error(f"Error o ya estaba borrada: {e}")
          # ---------------------------------------------------------
-
+            st.error("🚨 DEBUG: Streamlit SÍ entró al bloque de la Constructora")
             st.sidebar.header("⚙️ Variables Macroeconómicas")
             
             tasa_oficial = obtener_tasa_bcv_automatica()
