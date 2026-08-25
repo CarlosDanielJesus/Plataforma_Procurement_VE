@@ -402,7 +402,7 @@ elif seleccion == texto_menu_acceso:
                             cantidad_en_carrito = st.session_state['carrito'].get(sku_limpio, 0)
                             cantidad_total_proyectada = cantidad_en_carrito + cantidad_input
                             
-                            if cantidad_input <= stock_actual:
+                            if cantidad_total_proyectada <= stock_actual:
                                 if sku_limpio in st.session_state['carrito']:
                                     st.session_state['carrito'][sku_limpio] += cantidad_input
                                 else:
