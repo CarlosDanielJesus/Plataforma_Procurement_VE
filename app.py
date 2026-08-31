@@ -427,7 +427,6 @@ elif seleccion == texto_menu_acceso:
                 st.dataframe(df_catalogo, use_container_width=True)
                     
             # --- SECCIÓN DE ARMAR PEDIDO ---
-            st.divider()
             st.write("### 🛒 Armar Pedido (Carrito de Compras)")
             
             col_input1, col_input2, col_input3 = st.columns([2, 1, 1])
