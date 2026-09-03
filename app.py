@@ -380,15 +380,14 @@ elif seleccion == texto_menu_acceso:
             st.info("El catálogo está vacío actualmente. Los proveedores deben cargar mercancía.")
         else:
             tab_visual, tab_operativa = st.tabs(["🖼️ Catálogo Virtual", "📊 Vista de Tabla Tradicional"])
-            
             with tab_visual:
+            
                  st.write("### 🛍️ Explorar Materiales")
          
                  # Convertimos el DataFrame a un formato fácil de iterar
                  items_catalogo = df_catalogo.to_dict('records')
-        
-                 # Definimos cuántos productos queremos por fila (ej. 3 columnas)
                  columnas_por_fila = 3
+                 IMAGEN_DEFECTO = "https://via.placeholder.com/300x200.png?text=Sin+Imagen"
          
                  # Iteramos saltando de 3 en 3 para crear las filas
                  for i in range(0, len(items_catalogo), columnas_por_fila):
@@ -403,23 +402,26 @@ elif seleccion == texto_menu_acceso:
                             with col:
                                 # El parámetro border=True crea el efecto de "Tarjeta"
                                 with st.container(border=True): 
+                                    # 1. VALIDACIÓN DE VALOR (Filtra NaN, None y datos que no sean texto)
+                                    raw_imagen = item.get('IMAGEN')
+                                    if isinstance(raw_imagen, str) and raw_imagen.strip() and not pd.isna(raw_imagen):
+                                        url_imagen = raw_imagen.strip()
+                                    else:
+                                        url_imagen = IMAGEN_DEFECTO
                                     
-                                    # LÓGICA DE IMAGEN: Si en tu Excel no hay columna 'IMAGEN', 
-                                    # usamos un placeholder (imagen de relleno) por ahora.
-                                    # Si los proveedores luego suben links, puedes cambiar 'url_imagen'
-                                    url_imagen = item.get('IMAGEN', "https://via.placeholder.com/300x200.png?text=Sin+Imagen")
+                                    # 2. BLOQUE TRY-EXCEPT PARA RENDERIZADO SEGURO
+                                    try:
+                                        st.image(url_imagen, use_container_width=True)
+                                    except Exception:
+                                        st.image(IMAGEN_DEFECTO, use_container_width=True)
                                     
-                                    st.image(url_imagen, use_column_width=True)
-                                    
-                                    # Atributos del producto presentados de forma limpia
+                                    # Atributos del producto
                                     st.markdown(f"#### {item['MATERIAL']}")
                                     st.caption(f"📍 Proveedor: {item.get('PROVEEDOR', 'N/A')} | 🏷️ SKU: `{item['SKU']}`")
                                     
                                     st.markdown(f"**Precio:** 💲{item['PRECIO_USD']:.2f}")
                                     st.markdown(f"**Stock disponible:** 📦 {item['STOCK']} unds")
                                     
-                                    # Opcional: Podrías incluso poner un botón rápido para añadir al carrito aquí,
-                                    # o simplemente dejarlo como vista y que usen el cotizador que ya tienes abajo.
                                     
             # --- VISTA ORIGINAL INTACTA ---
             with tab_operativa:
