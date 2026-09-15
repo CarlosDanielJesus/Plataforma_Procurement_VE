@@ -444,25 +444,31 @@ elif seleccion == texto_menu_acceso:
                                         with st.container(border=True):
                                             # --- Renderizado de Imagen Seguro ---
                                             raw_imagen = item.get('IMAGEN') if 'IMAGEN' in item else item.get('IMAGEN ')
-                                            url_str = str(raw_imagen).strip()
-                                            
-                                            urls_encontradas = re.findall(r'(https?://[^\s)\]\'"]+)', url_str)
-                                            
-                                            if urls_encontradas and url_str.lower() != 'nan':
-                                                # Tomamos el primer enlace válido que el escáner haya encontrado
-                                                url_imagen = urls_encontradas[0]
-                                            else:
-                                                url_imagen = IMAGEN_DEFECTO
+                                            url_final = None
+                                    
+                                            if isinstance(raw_imagen, str) and raw_imagen.strip() and str(raw_imagen).lower() != 'nan':
+                                                # Limpiamos comillas accidentales
+                                                url_limpia = raw_imagen.strip().replace('"', '').replace("'", "")
                                                 
-                                            st.markdown(
-                                                f"""
-                                                <div style="display: flex; justify-content: center; margin-bottom: 15px;">
-                                                    <img src="{url_imagen}" 
-                                                        style="width: 100%; height: 200px; object-fit: cover; border-radius: 8px;"  
-                                                </div>
-                                                """, 
-                                                unsafe_allow_html=True
-                                            )
+                                                # Si el proveedor pegó en formato Markdown [link](link)
+                                                if url_limpia.startswith("[") and "](" in url_limpia:
+                                                    url_limpia = url_limpia.split("](")[1].replace(")", "")
+                                                    
+                                                # URL lista para usar
+                                                url_final = url_limpia.strip()
+
+                                            # --- 2. RENDERIZADO Y MODO DIAGNÓSTICO ---
+                                            if url_final:
+                                                try:
+                                                    # Intentamos cargar la imagen nativamente
+                                                    st.image(url_final, use_container_width=True)
+                                                except Exception as e:
+                                                    # SI FALLA, LA PANTALLA NOS DIRÁ EXACTAMENTE POR QUÉ
+                                                    st.error("⚠️ Falla de carga")
+                                                    st.code(f"URL extraída:\n{url_final}\n\nMotivo del bloqueo:\n{e}", language="text")
+                                            else:
+                                                # Fallback nativo de Streamlit (No requiere internet, nunca falla)
+                                                st.info("📦 Producto sin imagen", icon="📷")
                                             
                                             # --- Atributos del Producto ---
                                             st.markdown(f"**{item['MATERIAL']}**")
