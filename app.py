@@ -442,16 +442,22 @@ elif seleccion == texto_menu_acceso:
                                     with col:
                                         with st.container(border=True):
                                             # --- Renderizado de Imagen Seguro ---
-                                            raw_imagen = item.get('IMAGEN')
-                                            if isinstance(raw_imagen, str) and raw_imagen.strip() and not pd.isna(raw_imagen):
+                                            raw_imagen = item.get('IMAGEN') if 'IMAGEN' in item else item.get('IMAGEN ')
+                                            if isinstance(raw_imagen, str) and raw_imagen.strip() and str(raw_imagen).lower() != 'nan':
                                                 url_imagen = raw_imagen.strip()
                                             else:
                                                 url_imagen = IMAGEN_DEFECTO
                                             
-                                            try:
-                                                st.image(url_imagen, use_container_width=True)
-                                            except Exception:
-                                                st.image(IMAGEN_DEFECTO, use_container_width=True)
+                                            st.markdown(
+                                                f"""
+                                                <div style="display: flex; justify-content: center; margin-bottom: 15px;">
+                                                    <img src="{url_imagen}" 
+                                                        style="width: 100%; height: 200px; object-fit: cover; border-radius: 8px;" 
+                                                        onerror="this.onerror=null;this.src='{IMAGEN_DEFECTO}';">
+                                                </div>
+                                                """, 
+                                                unsafe_allow_html=True
+                                            )
                                             
                                             # --- Atributos del Producto ---
                                             st.markdown(f"**{item['MATERIAL']}**")
