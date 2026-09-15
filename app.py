@@ -4,6 +4,7 @@ import requests
 from bs4 import BeautifulSoup
 from streamlit_option_menu import option_menu
 import os 
+import re
 
 # Importaciones de tus módulos
 from modulos.ingesta_excel import cargar_inventario_excel
@@ -443,17 +444,21 @@ elif seleccion == texto_menu_acceso:
                                         with st.container(border=True):
                                             # --- Renderizado de Imagen Seguro ---
                                             raw_imagen = item.get('IMAGEN') if 'IMAGEN' in item else item.get('IMAGEN ')
-                                            if isinstance(raw_imagen, str) and raw_imagen.strip() and str(raw_imagen).lower() != 'nan':
-                                                url_imagen = raw_imagen.strip()
+                                            url_str = str(raw_imagen).strip()
+                                            
+                                            urls_encontradas = re.findall(r'(https?://[^\s)\]\'"]+)', url_str)
+                                            
+                                            if urls_encontradas and url_str.lower() != 'nan':
+                                                # Tomamos el primer enlace válido que el escáner haya encontrado
+                                                url_imagen = urls_encontradas[0]
                                             else:
                                                 url_imagen = IMAGEN_DEFECTO
-                                            
+                                                
                                             st.markdown(
                                                 f"""
                                                 <div style="display: flex; justify-content: center; margin-bottom: 15px;">
                                                     <img src="{url_imagen}" 
-                                                        style="width: 100%; height: 200px; object-fit: cover; border-radius: 8px;" 
-                                                        onerror="this.onerror=null;this.src='{IMAGEN_DEFECTO}';">
+                                                        style="width: 100%; height: 200px; object-fit: cover; border-radius: 8px;"  
                                                 </div>
                                                 """, 
                                                 unsafe_allow_html=True
