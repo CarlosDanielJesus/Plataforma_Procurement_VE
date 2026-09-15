@@ -380,48 +380,114 @@ elif seleccion == texto_menu_acceso:
             st.info("El catálogo está vacío actualmente. Los proveedores deben cargar mercancía.")
         else:
             tab_visual, tab_operativa = st.tabs(["🖼️ Catálogo Virtual", "📊 Vista de Tabla Tradicional"])
+            # --- NUEVA IMPLEMENTACIÓN: CATÁLOGO VISUAL MEJORADO ---
             with tab_visual:
-            
-                 st.write("### 🛍️ Explorar Materiales")
-         
-                 # Convertimos el DataFrame a un formato fácil de iterar
-                 items_catalogo = df_catalogo.to_dict('records')
-                 columnas_por_fila = 3
-                 IMAGEN_DEFECTO = "https://via.placeholder.com/300x200.png?text=Sin+Imagen"
-         
-                 # Iteramos saltando de 3 en 3 para crear las filas
-                 for i in range(0, len(items_catalogo), columnas_por_fila):
-                    # Creamos 3 columnas en Streamlit
-                    cols = st.columns(columnas_por_fila)
+                st.write("### 🛍️ Explorar Materiales")
+                
+                # 1. SISTEMA DE BÚSQUEDA
+                busqueda = st.text_input("🔍 Buscar por material, palabra clave o código SKU...", "")
+                
+                # Copiamos el dataframe para no alterar el original
+                df_filtrado = df_catalogo.copy()
+                
+                if busqueda:
+                    termino = busqueda.lower().strip()
+                    # Filtramos si la búsqueda coincide con el Material o el SKU
+                    df_filtrado = df_filtrado[
+                        df_filtrado['MATERIAL'].str.lower().str.contains(termino, na=False) |
+                        df_filtrado['SKU'].str.lower().str.contains(termino, na=False)
+                    ]
                     
-                    # Llenamos cada columna con un producto
-                    for j, col in enumerate(cols):
-                        if i + j < len(items_catalogo):
-                            item = items_catalogo[i + j]
+                if df_filtrado.empty:
+                    st.warning(f"No se encontraron resultados para: '{busqueda}'")
+                else:
+                    # 2. SISTEMA DE AGRUPACIÓN POR PROVEEDOR
+                    # Obtenemos la lista de proveedores únicos que quedaron tras el filtro
+                    proveedores = df_filtrado['PROVEEDOR'].unique()
+                    
+                    IMAGEN_DEFECTO = "https://via.placeholder.com/300x200.png?text=Sin+Imagen"
+                    columnas_por_fila = 3
+                    
+                    # Iteramos por cada proveedor para crearle su propia sección
+                    for proveedor in proveedores:
+                        st.markdown(f"### 🏭 Proveedor: **{proveedor}**")
+                        st.divider() # Línea separadora elegante
+                        
+                        # Extraemos solo los productos de este proveedor
+                        items_prov = df_filtrado[df_filtrado['PROVEEDOR'] == proveedor].to_dict('records')
+                        
+                        # Bucle de tarjetas (Grid)
+                        for i in range(0, len(items_prov), columnas_por_fila):
+                            cols = st.columns(columnas_por_fila)
                             
-                            with col:
-                                # El parámetro border=True crea el efecto de "Tarjeta"
-                                with st.container(border=True): 
-                                    # 1. VALIDACIÓN DE VALOR (Filtra NaN, None y datos que no sean texto)
-                                    raw_imagen = item.get('IMAGEN')
-                                    if isinstance(raw_imagen, str) and raw_imagen.strip() and not pd.isna(raw_imagen):
-                                        url_imagen = raw_imagen.strip()
-                                    else:
-                                        url_imagen = IMAGEN_DEFECTO
+                            for j, col in enumerate(cols):
+                                if i + j < len(items_prov):
+                                    item = items_prov[i + j]
+                                    sku_actual = item['SKU']
+                                    stock_max = item['STOCK']
                                     
-                                    # 2. BLOQUE TRY-EXCEPT PARA RENDERIZADO SEGURO
-                                    try:
-                                        st.image(url_imagen, use_container_width=True)
-                                    except Exception:
-                                        st.image(IMAGEN_DEFECTO, use_container_width=True)
-                                    
-                                    # Atributos del producto
-                                    st.markdown(f"#### {item['MATERIAL']}")
-                                    st.caption(f"📍 Proveedor: {item.get('PROVEEDOR', 'N/A')} | 🏷️ SKU: `{item['SKU']}`")
-                                    
-                                    st.markdown(f"**Precio:** 💲{item['PRECIO_USD']:.2f}")
-                                    st.markdown(f"**Stock disponible:** 📦 {item['STOCK']} unds")
-                                    
+                                    with col:
+                                        with st.container(border=True):
+                                            # --- Renderizado de Imagen Seguro ---
+                                            raw_imagen = item.get('IMAGEN')
+                                            if isinstance(raw_imagen, str) and raw_imagen.strip() and not pd.isna(raw_imagen):
+                                                url_imagen = raw_imagen.strip()
+                                            else:
+                                                url_imagen = IMAGEN_DEFECTO
+                                            
+                                            try:
+                                                st.image(url_imagen, use_container_width=True)
+                                            except Exception:
+                                                st.image(IMAGEN_DEFECTO, use_container_width=True)
+                                            
+                                            # --- Atributos del Producto ---
+                                            st.markdown(f"**{item['MATERIAL']}**")
+                                            st.caption(f"🏷️ SKU: `{sku_actual}`")
+                                            st.markdown(f"**Precio:** 💲{item['PRECIO_USD']:.2f}")
+                                            st.markdown(f"**Stock total:** 📦 {stock_max} unds")
+                                            
+                                            # --- 3. SISTEMA DE CARRITO INTEGRADO ---
+                                            st.markdown("---") # Pequeña división interna
+                                            
+                                            cant_en_carrito = st.session_state['carrito'].get(sku_actual, 0)
+                                            stock_disponible = stock_max - cant_en_carrito
+                                            
+                                            # Validamos si aún puede comprar de este material
+                                            if stock_disponible > 0:
+                                                # Mini-columnas para agrupar el input y el botón
+                                                col_qty, col_btn = st.columns([1, 1.5])
+                                                
+                                                with col_qty:
+                                                    # El max_value ayuda visualmente a no pedir más de lo que sobra
+                                                    cant_input = st.number_input(
+                                                        "Cant.", 
+                                                        min_value=1, 
+                                                        max_value=int(stock_disponible), 
+                                                        step=1, 
+                                                        key=f"qty_{sku_actual}_{proveedor}", # Key única vital
+                                                        label_visibility="collapsed"
+                                                    )
+                                                    
+                                                with col_btn:
+                                                    if st.button("➕ Añadir", key=f"btn_{sku_actual}_{proveedor}", use_container_width=True):
+                                                        cant_total_proyectada = cant_en_carrito + cant_input
+                                                        
+                                                        # Doble validación de seguridad (igual a la vista tabla)
+                                                        if cant_total_proyectada <= stock_max:
+                                                            if sku_actual in st.session_state['carrito']:
+                                                                st.session_state['carrito'][sku_actual] += cant_input
+                                                            else:
+                                                                st.session_state['carrito'][sku_actual] = cant_input
+                                                            
+                                                            # Usamos st.toast para una notificación bonita que no rompa el diseño
+                                                            st.toast(f"✅ ¡Se añadieron {cant_input}x {item['MATERIAL']} al carrito!")
+                                                            
+                                                            # Recargamos la interfaz para actualizar los stocks y la vista del pedido
+                                                            st.rerun()
+                                                        else:
+                                                            st.error("Límite de stock superado.")
+                                            else:
+                                                st.error("🚫 Agotado / Máximo en carrito")
                                     
             # --- VISTA ORIGINAL INTACTA ---
             with tab_operativa:
