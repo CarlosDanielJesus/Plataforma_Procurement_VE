@@ -384,8 +384,18 @@ elif seleccion == texto_menu_acceso:
             with tab_visual:
                 st.write("### 🛍️ Explorar Materiales")
                 
+                # 1. SISTEMA DE BÚSQUEDA Y FILTRADO AVANZADO
+                # Usamos columnas para colocar la búsqueda y el filtro de proveedor lado a lado
+                col_busqueda, col_filtro = st.columns([2, 1])
+                
                 # 1. SISTEMA DE BÚSQUEDA
-                busqueda = st.text_input("🔍 Buscar por material, palabra clave o código SKU...", "")
+                with col_busqueda:
+                    busqueda = st.text_input("🔍 Buscar por material, palabra clave o código SKU...", "")
+                    
+                with col_filtro:
+                    # Creamos la lista de proveedores únicos y añadimos la opción "Todos" al inicio
+                    lista_proveedores = ["Todos los proveedores"] + list(df_catalogo['PROVEEDOR'].dropna().unique())
+                    proveedor_seleccionado = st.selectbox("🏭 Filtrar por Proveedor", lista_proveedores)
                 
                 # Copiamos el dataframe para no alterar el original
                 df_filtrado = df_catalogo.copy()
@@ -398,18 +408,21 @@ elif seleccion == texto_menu_acceso:
                         df_filtrado['SKU'].str.lower().str.contains(termino, na=False)
                     ]
                     
+                # B) Aplicamos el filtro de proveedor (si seleccionó una empresa específica)
+                if proveedor_seleccionado != "Todos los proveedores":
+                    df_filtrado = df_filtrado[df_filtrado['PROVEEDOR'] == proveedor_seleccionado]
+                            
                 if df_filtrado.empty:
                     st.warning(f"No se encontraron resultados para: '{busqueda}'")
                 else:
                     # 2. SISTEMA DE AGRUPACIÓN POR PROVEEDOR
-                    # Obtenemos la lista de proveedores únicos que quedaron tras el filtro
-                    proveedores = df_filtrado['PROVEEDOR'].unique()
+                    proveedores_filtrados = df_filtrado['PROVEEDOR'].unique()
                     
                     IMAGEN_DEFECTO = "https://via.placeholder.com/300x200.png?text=Sin+Imagen"
                     columnas_por_fila = 3
                     
                     # Iteramos por cada proveedor para crearle su propia sección
-                    for proveedor in proveedores:
+                    for proveedor in proveedores_filtrados:
                         st.markdown(f"### 🏭 Proveedor: **{proveedor}**")
                         st.divider() # Línea separadora elegante
                         
