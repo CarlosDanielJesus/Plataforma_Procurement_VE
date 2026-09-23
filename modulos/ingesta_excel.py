@@ -31,24 +31,30 @@ def cargar_inventario_excel(ruta_archivo):
                 # Si 'IMAGEN' no venía en el Excel, la creamos vacía para no romper el DataFrame maestro
                 if 'IMAGEN' not in df_final.columns:
                     df_final['IMAGEN'] = None
+                    
+                df_final['PRECIO_USD'] = pd.to_numeric(df_final['PRECIO_USD'], errors='coerce')
+                df_final['STOCK'] = pd.to_numeric(df_final['STOCK'], errors='coerce').fillna(0)
 
                 
                 # Guardamos o concatenamos al catálogo general en st.session_state
                 # (aquí va tu lógica actual para guardar en st.session_state['catalogo'] o la BD)
                 st.success("✅ ¡Inventario procesado e importado con éxito!")
+                return df_final
                 
             else:
                 st.error("❌ El archivo Excel no contiene todas las columnas requeridas (SKU, MATERIAL, PRECIO_USD, STOCK).")
+                return None
                 
         except Exception as e:
             st.error(f"Error al procesar el archivo Excel: {e}")
-            
         except FileNotFoundError:
             print(f"[Error] No se encontró el archivo en la ruta: {ruta_archivo}")
             return None
         except ValueError as error_valor:
             print(f"[Error de Formato] El Excel no tiene la estructura correcta. Detalles: {error_valor}")
             return None
+        
+    return None
     # """
     # Lee un archivo Excel y verifica que tenga la estructura correcta.
     # Retorna un DataFrame de Pandas o None si hay un error.
