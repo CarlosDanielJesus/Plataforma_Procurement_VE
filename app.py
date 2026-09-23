@@ -384,6 +384,7 @@ elif seleccion == texto_menu_acceso:
             # --- NUEVA IMPLEMENTACIÓN: CATÁLOGO VISUAL MEJORADO ---
             with tab_visual:
                 st.write("### 🛍️ Explorar Materiales")
+                st.info(f"🕵️ Columnas detectadas en el Excel: {df_catalogo.columns.tolist()}")
                 
                 # 1. SISTEMA DE BÚSQUEDA Y FILTRADO AVANZADO
                 # Usamos columnas para colocar la búsqueda y el filtro de proveedor lado a lado
@@ -442,8 +443,14 @@ elif seleccion == texto_menu_acceso:
                                     
                                     with col:
                                         with st.container(border=True):
+                                            
+                                            col_imagen_real = None
+                                            for key in item.keys():
+                                                 if 'imagen' in str(key).lower():
+                                                    col_imagen_real = key
+                                                    break
                                             # --- Renderizado de Imagen Seguro ---
-                                            raw_imagen = item.get('IMAGEN') if 'IMAGEN' in item else item.get('IMAGEN ')
+                                            raw_imagen = item.get(col_imagen_real) if col_imagen_real else None
                                             url_final = None
                                     
                                             if isinstance(raw_imagen, str) and raw_imagen.strip() and str(raw_imagen).lower() != 'nan':
