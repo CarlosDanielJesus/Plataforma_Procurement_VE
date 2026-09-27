@@ -322,7 +322,7 @@ elif seleccion == texto_menu_acceso:
         archivo_subido = st.file_uploader("Selecciona tu archivo Excel (.xlsx)", type=['xlsx'])
         
         if archivo_subido is not None:
-            df_nuevo = cargar_inventario_excel(archivo_subido)
+            df_nuevo = cargar_inventario_excel(ruta_archivo=archivo_subido)
             
             if df_nuevo is not None:
                 # Añadimos la columna del proveedor automáticamente
