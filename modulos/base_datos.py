@@ -13,9 +13,9 @@ def inicializar_tablas():
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS usuarios (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            usuario TEXT UNIQUE,
-            password TEXT,
-            rol TEXT
+            usuario TEXT UNIQUE NOT NULL,
+            password TEXT NOT NULL,
+            rol TEXT NOT NULL
         )
     ''')
     
@@ -23,11 +23,12 @@ def inicializar_tablas():
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS inventario (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            sku TEXT,
-            material TEXT,
-            precio_usd REAL,
-            stock INTEGER,
-            proveedor_id INTEGER,
+            proveedor_id INTEGER NOT NULL,
+            sku TEXT NOT NULL,
+            material TEXT NOT NULL,
+            precio_usd REAL NOT NULL,
+            stock INTEGER NOT NULL,
+            imagen TEXT,
             FOREIGN KEY(proveedor_id) REFERENCES usuarios(id)
         )
     ''')
@@ -61,7 +62,8 @@ def obtener_catalogo_completo():
                 i.sku AS SKU, 
                 i.material AS MATERIAL, 
                 i.precio_usd AS PRECIO_USD, 
-                i.stock AS STOCK, 
+                i.stock AS STOCK,
+                i.imagen AS IMAGEN, 
                 u.usuario AS PROVEEDOR
             FROM inventario i
             LEFT JOIN usuarios u ON i.proveedor_id = u.id
@@ -90,15 +92,15 @@ def guardar_inventario_en_bd(df_inventario, proveedor_id, actualizar=False):
         for index, fila in df_inventario.iterrows():
             cursor.execute("""
                 UPDATE inventario 
-                SET material = ?, precio_usd = ?, stock = ?
+                SET material = ?, precio_usd = ?, stock = ?, imagen = ?
                 WHERE sku = ? AND proveedor_id = ?
-            """, (fila['MATERIAL'], fila['PRECIO_USD'], fila['STOCK'], fila['SKU'], proveedor_id))
+            """, (fila['MATERIAL'], fila['PRECIO_USD'], fila['STOCK'], fila['SKU'], fila['IMAGEN'], proveedor_id))
             
             if cursor.rowcount == 0:
                 cursor.execute("""
-                    INSERT INTO inventario (sku, material, precio_usd, stock, proveedor_id)
-                    VALUES (?, ?, ?, ?, ?)
-                """, (fila['SKU'], fila['MATERIAL'], fila['PRECIO_USD'], fila['STOCK'], proveedor_id))
+                    INSERT INTO inventario (sku, material, precio_usd, stock, imagen, proveedor_id)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                """, (fila['SKU'], fila['MATERIAL'], fila['PRECIO_USD'], fila['STOCK'], fila['IMAGEN'], proveedor_id))
 
     else:
         # --- MODO 2: CARGAR INVENTARIO NUEVO (Reemplazo total) ---
@@ -106,9 +108,9 @@ def guardar_inventario_en_bd(df_inventario, proveedor_id, actualizar=False):
         
         for index, fila in df_inventario.iterrows():
             cursor.execute("""
-                INSERT INTO inventario (sku, material, precio_usd, stock, proveedor_id)
-                VALUES (?, ?, ?, ?, ?)
-            """, (fila['SKU'], fila['MATERIAL'], fila['PRECIO_USD'], fila['STOCK'], proveedor_id))
+                INSERT INTO inventario (sku, material, precio_usd, stock, imagen, proveedor_id)
+                VALUES (?, ?, ?, ?, ?, ?)
+            """, (fila['SKU'], fila['MATERIAL'], fila['PRECIO_USD'], fila['STOCK'], fila['IMAGEN'], proveedor_id))
 
     conn.commit()
     conn.close()
