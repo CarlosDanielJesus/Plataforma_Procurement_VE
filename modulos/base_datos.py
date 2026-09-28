@@ -90,27 +90,37 @@ def guardar_inventario_en_bd(df_inventario, proveedor_id, actualizar=False):
     if actualizar:
         # --- MODO 1: ACTUALIZAR INVENTARIO EXISTENTE ---
         for index, fila in df_inventario.iterrows():
+            
+            imagen_val = fila.get('IMAGEN')
+            if pd.isna(imagen_val) or str(imagen_val).strip() == '':
+                imagen_val = None
+                
             cursor.execute("""
                 UPDATE inventario 
                 SET material = ?, precio_usd = ?, stock = ?, imagen = ?
                 WHERE sku = ? AND proveedor_id = ?
-            """, (fila['MATERIAL'], fila['PRECIO_USD'], fila['STOCK'], fila['SKU'], fila['IMAGEN'], proveedor_id))
+            """, (fila['MATERIAL'], fila['PRECIO_USD'], fila['STOCK'], imagen_val, fila['SKU'], proveedor_id))
             
             if cursor.rowcount == 0:
                 cursor.execute("""
                     INSERT INTO inventario (sku, material, precio_usd, stock, imagen, proveedor_id)
                     VALUES (?, ?, ?, ?, ?, ?)
-                """, (fila['SKU'], fila['MATERIAL'], fila['PRECIO_USD'], fila['STOCK'], fila['IMAGEN'], proveedor_id))
+                """, (fila['SKU'], fila['MATERIAL'], fila['PRECIO_USD'], fila['STOCK'], imagen_val, proveedor_id))
 
     else:
         # --- MODO 2: CARGAR INVENTARIO NUEVO (Reemplazo total) ---
         cursor.execute("DELETE FROM inventario WHERE proveedor_id = ?", (proveedor_id,))
         
         for index, fila in df_inventario.iterrows():
+            imagen_val = fila.get('IMAGEN')
+            if pd.isna(imagen_val) or str(imagen_val).strip() == '':
+                imagen_val = None
+        
+        for index, fila in df_inventario.iterrows():
             cursor.execute("""
                 INSERT INTO inventario (sku, material, precio_usd, stock, imagen, proveedor_id)
                 VALUES (?, ?, ?, ?, ?, ?)
-            """, (fila['SKU'], fila['MATERIAL'], fila['PRECIO_USD'], fila['STOCK'], fila['IMAGEN'], proveedor_id))
+            """, (fila['SKU'], fila['MATERIAL'], fila['PRECIO_USD'], fila['STOCK'], imagen_val, proveedor_id))
 
     conn.commit()
     conn.close()
