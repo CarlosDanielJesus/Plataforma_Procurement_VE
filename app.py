@@ -428,7 +428,7 @@ elif seleccion == texto_menu_acceso:
                         st.markdown(f"### 🏭 Proveedor: **{proveedor}**")
                         st.divider() # Línea separadora elegante
                         
-                        # Extraemos solo los productos de este proveedor
+                        # Extraemos solo l os productos de este proveedor
                         items_prov = df_filtrado[df_filtrado['PROVEEDOR'] == proveedor].to_dict('records')
                         
                         # Bucle de tarjetas (Grid)
@@ -466,16 +466,34 @@ elif seleccion == texto_menu_acceso:
 
                                             # --- 2. RENDERIZADO Y MODO DIAGNÓSTICO ---
                                             if url_final:
-                                                try:
-                                                    # Intentamos cargar la imagen nativamente
-                                                    st.image(url_final, use_container_width=True)
-                                                except Exception as e:
-                                                    # SI FALLA, LA PANTALLA NOS DIRÁ EXACTAMENTE POR QUÉ
-                                                    st.error("⚠️ Falla de carga")
-                                                    st.code(f"URL extraída:\n{url_final}\n\nMotivo del bloqueo:\n{e}", language="text")
+                                                st.markdown(
+                                                    f"""
+                                                    <div style="display: flex; justify-content: center; align-items: center; overflow: hidden; border-radius: 6px; margin-bottom: 10px; background-color: #f0f2f6;">
+                                                        <img src="{url_final}" style="width: 100%; height: 180px; object-fit: cover;" onerror="this.src='{IMAGEN_DEFECTO}';">
+                                                    </div>
+                                                    """, 
+                                                    unsafe_allow_html=True
+                                                )
                                             else:
-                                                # Fallback nativo de Streamlit (No requiere internet, nunca falla)
-                                                st.info("📦 Producto sin imagen", icon="📷")
+                                                # Tarjeta con la misma proporción si la celda de Excel estaba vacía
+                                                st.markdown(
+                                                    f"""
+                                                    <div style="display: flex; justify-content: center; align-items: center; overflow: hidden; border-radius: 6px; margin-bottom: 10px; background-color: #f0f2f6;">
+                                                        <img src="{IMAGEN_DEFECTO}" style="width: 100%; height: 180px; object-fit: cover;">
+                                                    </div>
+                                                    """, 
+                                                    unsafe_allow_html=True
+                                                )
+                                            #     try:
+                                            #         # Intentamos cargar la imagen nativamente
+                                            #         st.image(url_final, use_container_width=True)
+                                            #     except Exception as e:
+                                            #         # SI FALLA, LA PANTALLA NOS DIRÁ EXACTAMENTE POR QUÉ
+                                            #         st.error("⚠️ Falla de carga")
+                                            #         st.code(f"URL extraída:\n{url_final}\n\nMotivo del bloqueo:\n{e}", language="text")
+                                            # else:
+                                            #     # Fallback nativo de Streamlit (No requiere internet, nunca falla)
+                                            #     st.info("📦 Producto sin imagen", icon="📷")
                                             
                                             # --- Atributos del Producto ---
                                             st.markdown(f"**{item['MATERIAL']}**")
