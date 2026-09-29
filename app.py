@@ -420,7 +420,7 @@ elif seleccion == texto_menu_acceso:
                     # 2. SISTEMA DE AGRUPACIÓN POR PROVEEDOR
                     proveedores_filtrados = df_filtrado['PROVEEDOR'].unique()
                     
-                    IMAGEN_DEFECTO = "https://via.placeholder.com/300x200.png?text=Sin+Imagen"
+                    IMAGEN_DEFECTO = "https://img.icons8.com/m_rounded/1200/no-image.jpg"
                     columnas_por_fila = 3
                     
                     # Iteramos por cada proveedor para crearle su propia sección
