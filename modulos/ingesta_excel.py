@@ -21,10 +21,17 @@ def cargar_inventario_excel(ruta_archivo):
                 # 4. Definir qué columnas conservar
                 columnas_a_conservar = columnas_requeridas.copy()
                 
-                # Si el Excel trajo columna 'IMAGEN', la conservamos explícitamente
-                if 'IMAGEN' in df_temp.columns:
-                    columnas_a_conservar.append('IMAGEN')
+                col_img_encontrada = None
+                for col in df_temp.columns:
+                    # Buscamos variaciones comunes que el proveedor pudo escribir
+                    if col in ['IMAGEN', 'IMÁGEN', 'IMAGENES', 'FOTO', 'URL', 'URL_IMAGEN']:
+                        col_img_encontrada = col
+                        break
                 
+                # Si encontró la columna, la renombramos a la estándar del sistema
+                if col_img_encontrada:
+                    df_temp.rename(columns={col_img_encontrada: 'IMAGEN'}, inplace=True)
+                    columnas_a_conservar.append('IMAGEN')
                 # Extraemos las columnas válidas
                 df_final = df_temp[columnas_a_conservar].copy()
                 
