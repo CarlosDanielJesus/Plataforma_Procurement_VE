@@ -477,6 +477,7 @@ elif seleccion == texto_menu_acceso:
                                                 )
                                             else:
                                                 # Tarjeta con la misma proporción si la celda de Excel estaba vacía
+                                                st.write(f"🔎 URL que intenta cargar Python: `{url_final}`")
                                                 st.markdown(
                                                     f"""
                                                     <div style="display: flex; justify-content: center; align-items: center; overflow: hidden; border-radius: 6px; margin-bottom: 10px; background-color: #f0f2f6;">
