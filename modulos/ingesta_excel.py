@@ -23,8 +23,8 @@ def cargar_inventario_excel(ruta_archivo):
                 
                 col_img_encontrada = None
                 for col in df_temp.columns:
-                    # Buscamos variaciones comunes que el proveedor pudo escribir
-                    if col in ['IMAGEN', 'IMÁGEN', 'IMAGENES', 'FOTO', 'URL', 'URL_IMAGEN']:
+                    col_lower=col.lower()
+                    if 'imagen' in col_lower or 'foto' in col_lower or ('url' in col_lower and 'sku' not in col_lower):
                         col_img_encontrada = col
                         break
                 
@@ -56,10 +56,6 @@ def cargar_inventario_excel(ruta_archivo):
                 
                 return df_final
                 
-                # Guardamos o concatenamos al catálogo general en st.session_state
-                # (aquí va tu lógica actual para guardar en st.session_state['catalogo'] o la BD)
-                st.success("✅ ¡Inventario procesado e importado con éxito!")
-                
             else:
                 st.error("❌ El archivo Excel no contiene todas las columnas requeridas (SKU, MATERIAL, PRECIO_USD, STOCK).")
                 return None
@@ -74,7 +70,8 @@ def cargar_inventario_excel(ruta_archivo):
             st.error(f"[Error de Formato] El Excel no tiene la estructura correcta. Detalles: {error_valor}")
             return None
         
-    return None
+    
+    
     # """
     # Lee un archivo Excel y verifica que tenga la estructura correcta.
     # Retorna un DataFrame de Pandas o None si hay un error.
