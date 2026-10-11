@@ -1,5 +1,6 @@
 import sqlite3
 import pandas as pd
+import modulos.imagenes
 
 def conectar_db():
     # Crea un archivo 'plataforma.db' en la raíz de tu proyecto
@@ -73,57 +74,50 @@ def obtener_catalogo_completo():
     except Exception as e:
         print(f"Error al obtener el catálogo: {e}")
         # Aseguramos que el dataframe vacío también tenga las columnas en mayúsculas
-        return pd.DataFrame(columns=['SKU', 'MATERIAL', 'PRECIO_USD', 'STOCK', 'PROVEEDOR'])
+        return pd.DataFrame(columns=['SKU', 'MATERIAL', 'PRECIO_USD', 'STOCK', 'IMAGEN', 'PROVEEDOR'])
     finally:
         conn.close()
 
+def _limpiar_imagen(valor):
+    if valor is None or pd.isna(valor):
+        return None
+    s = str(valor).strip()
+    return None if s == '' or s.lower() == 'nan' else s
+
+
 def guardar_inventario_en_bd(df_inventario, proveedor_id, actualizar=False):
-    """
-    Guarda o actualiza el inventario en la base de datos.
-    - Si actualizar=False: Borra el inventario anterior de este proveedor y carga el nuevo de cero.
-    - Si actualizar=True: Busca si el SKU existe. Si existe, actualiza precio y stock. Si no, lo añade.
-    """
-    # CORRECCIÓN: Usar la función conectar_db() para apuntar a 'plataforma.db'
     conn = conectar_db()
     cursor = conn.cursor()
+    try:
+        if not actualizar:
+            # Reemplazo total del catálogo de este proveedor
+            cursor.execute("DELETE FROM inventario WHERE proveedor_id = ?", (proveedor_id,))
 
-    if actualizar:
-        # --- MODO 1: ACTUALIZAR INVENTARIO EXISTENTE ---
-        for index, fila in df_inventario.iterrows():
-            
-            imagen_val = fila.get('IMAGEN')
-            if pd.isna(imagen_val) or str(imagen_val).strip() == '':
-                imagen_val = None
-                
-            cursor.execute("""
-                UPDATE inventario 
-                SET material = ?, precio_usd = ?, stock = ?, imagen = ?
-                WHERE sku = ? AND proveedor_id = ?
-            """, (fila['MATERIAL'], fila['PRECIO_USD'], fila['STOCK'], imagen_val, fila['SKU'], proveedor_id))
-            
-            if cursor.rowcount == 0:
+        for _, fila in df_inventario.iterrows():
+            imagen_val = _limpiar_imagen(fila.get('IMAGEN'))   # se calcula POR FILA
+            sku = str(fila['SKU']).strip().upper()
+            datos = (fila['MATERIAL'], float(fila['PRECIO_USD']), int(fila['STOCK']), imagen_val)
+
+            if actualizar:
                 cursor.execute("""
-                    INSERT INTO inventario (sku, material, precio_usd, stock, imagen, proveedor_id)
-                    VALUES (?, ?, ?, ?, ?, ?)
-                """, (fila['SKU'], fila['MATERIAL'], fila['PRECIO_USD'], fila['STOCK'], imagen_val, proveedor_id))
+                    UPDATE inventario
+                    SET material = ?, precio_usd = ?, stock = ?, imagen = ?
+                    WHERE sku = ? AND proveedor_id = ?
+                """, (*datos, sku, proveedor_id))
+                if cursor.rowcount > 0:
+                    continue
 
-    else:
-        # --- MODO 2: CARGAR INVENTARIO NUEVO (Reemplazo total) ---
-        cursor.execute("DELETE FROM inventario WHERE proveedor_id = ?", (proveedor_id,))
-        
-        for index, fila in df_inventario.iterrows():
-            imagen_val = fila.get('IMAGEN')
-            if pd.isna(imagen_val) or str(imagen_val).strip() == '':
-                imagen_val = None
-        
-        for index, fila in df_inventario.iterrows():
             cursor.execute("""
                 INSERT INTO inventario (sku, material, precio_usd, stock, imagen, proveedor_id)
                 VALUES (?, ?, ?, ?, ?, ?)
-            """, (fila['SKU'], fila['MATERIAL'], fila['PRECIO_USD'], fila['STOCK'], imagen_val, proveedor_id))
+            """, (sku, *datos, proveedor_id))
 
-    conn.commit()
-    conn.close()
+        conn.commit()
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        conn.close()
 
 def registrar_usuario(usuario, password, rol):
     """
