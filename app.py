@@ -320,7 +320,7 @@ elif seleccion == texto_menu_acceso:
         # Selección de modo de operación
         modo_operacion = st.radio("¿Qué deseas hacer?", ["Cargar Inventario Nuevo", "Actualizar Inventario Existente"])
         
-        archivo_subido = st.file_uploader("Selecciona tu archivo Excel (.xlsx)", type=['xlsx'])
+        archivo_subido = st.file_uploader("Selecciona tu archivo Excel (.xlsx o .xls)", type=['xlsx', 'xls'])
         
         if archivo_subido is not None:
             df_nuevo = cargar_inventario_excel(ruta_archivo=archivo_subido)
