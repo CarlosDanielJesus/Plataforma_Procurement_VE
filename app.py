@@ -11,6 +11,7 @@ from modulos.ingesta_excel import cargar_inventario_excel
 from modulos.motor_riesgo import MotorFinanciero
 from modulos.cotizador import generar_cotizacion
 from modulos.base_datos import inicializar_tablas, verificar_login, obtener_catalogo_completo, guardar_inventario_en_bd, registrar_usuario
+from modulos.imagenes import mostrar_imagen_producto
 
 # ==========================================
 # 1. CONFIGURACIÓN DE PÁGINA (Única al inicio)
@@ -443,60 +444,9 @@ elif seleccion == texto_menu_acceso:
                                     
                                     with col:
                                         with st.container(border=True):
-                                            
-                                            col_imagen_real = None
-                                            for key in item.keys():
-                                                 if 'imagen' in str(key).lower():
-                                                    col_imagen_real = key
-                                                    break
-                                            # --- Renderizado de Imagen Seguro ---
-                                            raw_imagen = item.get(col_imagen_real) if col_imagen_real else None
-                                            url_final = None
-                                    
-                                            if isinstance(raw_imagen, str) and raw_imagen.strip() and str(raw_imagen).lower() != 'nan':
-                                                # Limpiamos comillas accidentales
-                                                url_limpia = raw_imagen.strip().replace('"', '').replace("'", "")
-                                                
-                                                # Si el proveedor pegó en formato Markdown [link](link)
-                                                if url_limpia.startswith("[") and "](" in url_limpia:
-                                                    url_limpia = url_limpia.split("](")[1].replace(")", "")
-                                                    
-                                                # URL lista para usar
-                                                url_final = url_limpia.strip()
+                                            col_img = next((k for k in item.keys() if 'imagen' in str(k).lower()), None)
+                                            mostrar_imagen_producto(item.get(col_img) if col_img else None)
 
-                                            # --- 2. RENDERIZADO Y MODO DIAGNÓSTICO ---
-                                            if url_final:
-                                                st.write(f"🔎 URL que intenta cargar Python: `{url_final}`")
-                                                st.markdown(
-                                                    f"""
-                                                    <div style="display: flex; justify-content: center; align-items: center; overflow: hidden; border-radius: 6px; margin-bottom: 10px; background-color: #f0f2f6;">
-                                                        <img src="{url_final}" style="width: 100%; height: 180px; object-fit: cover;" onerror="this.src='{IMAGEN_DEFECTO}';">
-                                                    </div>
-                                                    """, 
-                                                    unsafe_allow_html=True
-                                                )
-                                            else:
-                                                # Tarjeta con la misma proporción si la celda de Excel estaba vacía
-                                                st.write(f"🔎 URL que intenta cargar Python: `{url_final}`")
-                                                st.markdown(
-                                                    f"""
-                                                    <div style="display: flex; justify-content: center; align-items: center; overflow: hidden; border-radius: 6px; margin-bottom: 10px; background-color: #f0f2f6;">
-                                                        <img src="{IMAGEN_DEFECTO}" style="width: 100%; height: 180px; object-fit: cover;">
-                                                    </div>
-                                                    """, 
-                                                    unsafe_allow_html=True
-                                                )
-                                            #     try:
-                                            #         # Intentamos cargar la imagen nativamente
-                                            #         st.image(url_final, use_container_width=True)
-                                            #     except Exception as e:
-                                            #         # SI FALLA, LA PANTALLA NOS DIRÁ EXACTAMENTE POR QUÉ
-                                            #         st.error("⚠️ Falla de carga")
-                                            #         st.code(f"URL extraída:\n{url_final}\n\nMotivo del bloqueo:\n{e}", language="text")
-                                            # else:
-                                            #     # Fallback nativo de Streamlit (No requiere internet, nunca falla)
-                                            #     st.info("📦 Producto sin imagen", icon="📷")
-                                            
                                             # --- Atributos del Producto ---
                                             st.markdown(f"**{item['MATERIAL']}**")
                                             st.caption(f"🏷️ SKU: `{sku_actual}`")

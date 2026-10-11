@@ -1,6 +1,7 @@
 
 import streamlit as st
 import pandas as pd
+from modulos.imagenes import normalizar_url_imagen   # arriba del archivo
 
 def cargar_inventario_excel(ruta_archivo):
     # --- LÓGICA DE PROCESAMIENTO DE EXCEL/CSV SUBIDO POR EL PROVEEDOR ---
@@ -38,36 +39,20 @@ def cargar_inventario_excel(ruta_archivo):
                 # Si 'IMAGEN' no venía en el Excel, la creamos vacía para no romper el DataFrame maestro
                 if 'IMAGEN' not in df_final.columns:
                     df_final['IMAGEN'] = None
-                    
-                else:
-                    # 🛡️ EL ESCUDO ANTI-NAN (La solución al problema)
-                    # Forzamos a que todo sea texto. Si es NaN (vacío), lo convertimos en un string vacío.
-                    df_final['IMAGEN'] = df_final['IMAGEN'].fillna('')
-                    df_final['IMAGEN'] = df_final['IMAGEN'].astype(str)
-                    
-                    # Limpiamos espacios al inicio o final que rompan el link
-                    df_final['IMAGEN'] = df_final['IMAGEN'].str.strip()
-                    
-                    # Convertimos los "nan" (texto) que genera Pandas a None reales para SQLite
-                    df_final['IMAGEN'] = df_final['IMAGEN'].apply(lambda x: None if x.lower() == 'nan' or x == '' else x)
-
-                df_final['PRECIO_USD'] = pd.to_numeric(df_final['PRECIO_USD'], errors='coerce')
-                df_final['STOCK'] = pd.to_numeric(df_final['STOCK'], errors='coerce').fillna(0)
-                
-                return df_final
+                df_final['IMAGEN'] = df_final['IMAGEN'].apply(normalizar_url_imagen)    
                 
             else:
                 st.error("❌ El archivo Excel no contiene todas las columnas requeridas (SKU, MATERIAL, PRECIO_USD, STOCK).")
                 return None
             
-        except Exception as e:
-            st.error(f"Error al procesar el archivo Excel: {e}")
-            return None
         except FileNotFoundError:
             st.error(f"[Error] No se encontró el archivo en la ruta: {ruta_archivo}")
             return None
         except ValueError as error_valor:
             st.error(f"[Error de Formato] El Excel no tiene la estructura correcta. Detalles: {error_valor}")
+            return None
+        except Exception as e:
+            st.error(f"Error al procesar el archivo Excel: {e}")
             return None
         
     
