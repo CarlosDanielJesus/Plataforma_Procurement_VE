@@ -39,7 +39,17 @@ def cargar_inventario_excel(ruta_archivo):
                 # Si 'IMAGEN' no venía en el Excel, la creamos vacía para no romper el DataFrame maestro
                 if 'IMAGEN' not in df_final.columns:
                     df_final['IMAGEN'] = None
-                df_final['IMAGEN'] = df_final['IMAGEN'].apply(normalizar_url_imagen)    
+                df_final['IMAGEN'] = df_final['IMAGEN'].apply(normalizar_url_imagen)   
+                
+                df_final['SKU'] = df_final['SKU'].astype(str).str.strip().str.upper()
+                df_final['PRECIO_USD'] = pd.to_numeric(df_final['PRECIO_USD'], errors='coerce')
+                df_final['STOCK'] = pd.to_numeric(df_final['STOCK'], errors='coerce').fillna(0)
+
+                # Descarta filas sin SKU o sin precio válido (PRECIO_USD es NOT NULL en la BD)
+                df_final = df_final[(df_final['SKU'] != '') & (df_final['SKU'].str.lower() != 'nan')]
+                df_final = df_final.dropna(subset=['PRECIO_USD']).reset_index(drop=True) 
+                
+                return df_final
                 
             else:
                 st.error("❌ El archivo Excel no contiene todas las columnas requeridas (SKU, MATERIAL, PRECIO_USD, STOCK).")
